@@ -107,7 +107,13 @@ void DiscoveryService::processDatagram()
             QString peerName = deviceObj["name"].toString();
             QString pin = message["pin"].toString();
 
-            qDebug() << "Pairing request received from:" << peerName << "PIN:" << pin;
+            // Ignore our own pairing requests
+            if (peerId == m_deviceId) {
+                qDebug() << "Ignoring own pairing request";
+                continue;
+            }
+
+            qDebug() << "*** PAIRING REQUEST RECEIVED from:" << peerName << "(" << peerId << ") PIN:" << pin;
             emit pairingRequestReceived(peerId, peerName, pin);
             continue;
         }
@@ -193,9 +199,8 @@ void DiscoveryService::sendPairingRequest(const QString &peerId, const QString &
     QJsonDocument doc(message);
     QByteArray data = doc.toJson(QJsonDocument::Compact);
 
-    // Send to specific peer IP
-    QHostAddress peerAddress(peerIp);
-    m_udpSocket->writeDatagram(data, peerAddress, DISCOVERY_PORT);
+    // Send as broadcast (like discovery) to ensure it reaches the peer
+    m_udpSocket->writeDatagram(data, QHostAddress::Broadcast, DISCOVERY_PORT);
 
-    qDebug() << "Pairing request sent to" << peerIp;
+    qDebug() << "Pairing request broadcast sent with PIN:" << pin << "to peer" << peerId;
 }

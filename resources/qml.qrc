@@ -20,5 +20,10 @@
         <file alias="qml/views/WelcomeView.qml">../qml/views/WelcomeView.qml</file>
         <file alias="qml/views/RoleSelectionView.qml">../qml/views/RoleSelectionView.qml</file>
         <file alias="qml/views/DiscoveryView.qml">../qml/views/DiscoveryView.qml</file>
+        <file alias="qml/views/PairingView.qml">../qml/views/PairingView.qml</file>
+        <file alias="qml/views/ScanningView.qml">../qml/views/ScanningView.qml</file>
+        <file alias="qml/views/CategorySelectionView.qml">../qml/views/CategorySelectionView.qml</file>
+        <file alias="qml/views/TransferView.qml">../qml/views/TransferView.qml</file>
+        <file alias="qml/views/CompletionView.qml">../qml/views/CompletionView.qml</file>
     </qresource>
 </RCC>

@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import QtQuick3D 1.15
+import QtGraphicalEffects 1.15
 import "../components"
 import "../styles"
 
@@ -25,74 +25,30 @@ Item {
         }
     }
 
-    // 3D Scene
-    View3D {
-        id: view3D
+    // 2D Animation Area (instead of 3D)
+    Item {
+        id: animationArea
         anchors.fill: parent
         anchors.bottomMargin: 200
+        clip: true
 
-        environment: SceneEnvironment {
-            clearColor: "transparent"
-            backgroundMode: SceneEnvironment.Transparent
-            antialiasingMode: SceneEnvironment.MSAA
-            antialiasingQuality: SceneEnvironment.High
-        }
-
-        // Camera
-        PerspectiveCamera {
-            id: camera
-            position: Qt.vector3d(0, 150, 400)
-            eulerRotation.x: -20
-
-            // Subtle camera movement
-            SequentialAnimation on eulerRotation.y {
-                running: true
-                loops: Animation.Infinite
-                NumberAnimation { from: -10; to: 10; duration: 8000; easing.type: Easing.InOutQuad }
-                NumberAnimation { from: 10; to: -10; duration: 8000; easing.type: Easing.InOutQuad }
-            }
-        }
-
-        // Main directional light
-        DirectionalLight {
-            eulerRotation.x: -30
-            eulerRotation.y: -45
-            brightness: 1.0
-            color: "#FFFFFF"
-        }
-
-        // Fill light
-        DirectionalLight {
-            eulerRotation.x: 30
-            eulerRotation.y: 135
-            brightness: 0.5
-            color: "#8AAAFF"
-        }
-
-        // Ambient light
-        DirectionalLight {
-            eulerRotation.x: 0
-            eulerRotation.y: 0
-            brightness: 0.3
-            color: "#6688DD"
-        }
-
-        // Container for cubes
-        Node {
-            id: cubesContainer
+        // Container for animated data blocks
+        Item {
+            id: blocksContainer
+            anchors.fill: parent
         }
     }
 
-    // Cube spawner timer
+    // Data block spawner timer
     Timer {
-        id: cubeSpawner
-        interval: 300
+        id: blockSpawner
+        interval: 200
         running: true
         repeat: true
         onTriggered: {
-            // Limit concurrent cubes to 50
-            if (cubesContainer.children.length < 50) {
-                spawnCube()
+            // Limit concurrent blocks to 30
+            if (blocksContainer.children.length < 30) {
+                spawnDataBlock()
             }
         }
     }
@@ -237,16 +193,75 @@ Item {
         }
     }
 
-    // Functions
-    function spawnCube() {
-        var component = Qt.createComponent("DataCube.qml")
-        if (component.status === Component.Ready) {
-            var cube = component.createObject(cubesContainer, {
-                "x": Math.random() * 400 - 200,
-                "y": -150,
-                "z": Math.random() * 200 - 100
-            })
+    // Component for animated data blocks
+    Component {
+        id: dataBlockComponent
+        Rectangle {
+            id: block
+            width: 40
+            height: 40
+            radius: 8
+            color: Qt.rgba(0.3, 0.6, 1.0, 0.7)
+            border.color: Qt.rgba(0.5, 0.8, 1.0, 0.9)
+            border.width: 2
+
+            // Glow effect
+            layer.enabled: true
+            layer.effect: Glow {
+                radius: 8
+                samples: 16
+                color: Qt.rgba(0.3, 0.6, 1.0, 0.5)
+                spread: 0.3
+            }
+
+            // Upward movement animation
+            NumberAnimation on y {
+                from: block.y
+                to: -100
+                duration: 3000
+                easing.type: Easing.OutQuad
+            }
+
+            // Fade out animation
+            NumberAnimation on opacity {
+                from: 1.0
+                to: 0.0
+                duration: 3000
+            }
+
+            // Rotation animation
+            RotationAnimator on rotation {
+                from: 0
+                to: 360
+                duration: 3000
+                running: true
+            }
+
+            // Scale animation
+            SequentialAnimation on scale {
+                running: true
+                NumberAnimation { from: 0.0; to: 1.0; duration: 300; easing.type: Easing.OutBack }
+                NumberAnimation { from: 1.0; to: 0.8; duration: 2700 }
+            }
+
+            // Self-destruct after animation
+            Timer {
+                interval: 3200
+                running: true
+                repeat: false
+                onTriggered: {
+                    block.destroy()
+                }
+            }
         }
+    }
+
+    // Functions
+    function spawnDataBlock() {
+        var block = dataBlockComponent.createObject(blocksContainer, {
+            "x": Math.random() * (animationArea.width - 40),
+            "y": animationArea.height + 20
+        })
     }
 
     function formatBytes(bytes) {
@@ -276,6 +291,6 @@ Item {
     }
 
     Component.onCompleted: {
-        console.log("TransferView initialized")
+        console.log("TransferView initialized (2D version)")
     }
 }

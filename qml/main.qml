@@ -142,6 +142,106 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: pairingView
+        PairingView {
+            onPairingConfirmed: {
+                console.log("Pairing confirmed")
+                appCore.onPairingCompleted()
+                updateStages()
+            }
+            onPairingCancelled: {
+                console.log("Pairing cancelled")
+                stackView.pop()
+                updateStages()
+            }
+        }
+    }
+
+    Component {
+        id: scanningView
+        ScanningView {
+            onScanComplete: {
+                console.log("Scanning complete")
+                updateStages()
+            }
+        }
+    }
+
+    Component {
+        id: categorySelectionView
+        CategorySelectionView {
+            onCategoriesSelected: {
+                console.log("Categories selected")
+                appCore.startTransfer()
+                updateStages()
+            }
+        }
+    }
+
+    Component {
+        id: transferView
+        TransferView {
+            onTransferCancelled: {
+                console.log("Transfer cancelled")
+                appCore.cancelTransfer()
+            }
+        }
+    }
+
+    Component {
+        id: completionView
+        CompletionView {
+            onFinished: {
+                console.log("Finish clicked")
+                Qt.quit()
+            }
+        }
+    }
+
+    // Listen for stage changes from C++
+    Connections {
+        target: appState
+        function onStageChanged() {
+            console.log("Stage changed to:", appState.stage)
+            updateStages()
+
+            // Auto-navigate to the appropriate view
+            switch(appState.stage) {
+                case 3: // StagePairing
+                    console.log("Navigating to PairingView")
+                    stackView.push(pairingView)
+                    break
+                case 4: // StageScanning
+                    console.log("Navigating to ScanningView")
+                    stackView.push(scanningView)
+                    appCore.startScanning()
+                    break
+                case 5: // StageCategorySelection
+                    console.log("Navigating to CategorySelectionView")
+                    stackView.push(categorySelectionView)
+                    break
+                case 6: // StageTransfer
+                    console.log("Navigating to TransferView")
+                    stackView.push(transferView)
+                    break
+                case 7: // StageComplete
+                    console.log("Navigating to CompletionView")
+                    stackView.push(completionView)
+                    break
+            }
+        }
+    }
+
+    // Listen for transfer completion
+    Connections {
+        target: appCore
+        function onTransferCompleted() {
+            console.log("Transfer completed!")
+            appState.setStage(7) // StageComplete
+        }
+    }
+
     // Initialize
     Component.onCompleted: {
         console.log("Transporti UI initialized")

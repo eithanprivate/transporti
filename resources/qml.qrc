@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/qt/qml/Transporti">
+        <!-- Main -->
+        <file alias="qml/main.qml">../qml/main.qml</file>
+
+        <!-- Styles -->
+        <file alias="qml/styles/AquaTheme.qml">../qml/styles/AquaTheme.qml</file>
+        <file alias="qml/styles/qmldir">../qml/styles/qmldir</file>
+
+        <!-- Components -->
+        <file alias="qml/components/GradientBackground.qml">../qml/components/GradientBackground.qml</file>
+        <file alias="qml/components/AquaButton.qml">../qml/components/AquaButton.qml</file>
+        <file alias="qml/components/SidebarItem.qml">../qml/components/SidebarItem.qml</file>
+
+        <!-- Layout -->
+        <file alias="qml/layout/Sidebar.qml">../qml/layout/Sidebar.qml</file>
+        <file alias="qml/layout/MainLayout.qml">../qml/layout/MainLayout.qml</file>
+
+        <!-- Views -->
+        <file alias="qml/views/WelcomeView.qml">../qml/views/WelcomeView.qml</file>
+        <file alias="qml/views/RoleSelectionView.qml">../qml/views/RoleSelectionView.qml</file>
+        <file alias="qml/views/DiscoveryView.qml">../qml/views/DiscoveryView.qml</file>
+    </qresource>
+</RCC>

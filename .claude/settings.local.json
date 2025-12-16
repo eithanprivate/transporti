@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(qmake:*)",
+      "Bash(cmake:*)",
+      "Bash(tree:*)",
+      "Bash(pkg-config:*)",
+      "Bash(apt-cache search:*)",
+      "Bash(sudo apt update:*)",
+      "Bash(sudo apt install:*)",
+      "Bash(while read f)",
+      "Bash(do sed -i 's/^import QtQuick$/import QtQuick 2.15/g' \"$f\" sed -i 's/^import QtQuick.Controls$/import QtQuick.Controls 2.15/g' \"$f\" sed -i 's/^import QtQuick.Layouts$/import QtQuick.Layouts 1.15/g' \"$f\" sed -i 's/^import QtQuick.Window$/import QtQuick.Window 2.15/g' \"$f\" done)",
+      "Bash(make:*)"
+    ]
+  }
+}

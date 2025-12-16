@@ -1,0 +1,83 @@
+name: Build Transporti
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Qt5
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y qtbase5-dev qtdeclarative5-dev qt3d5-dev \
+                                qtquickcontrols2-5-dev libzstd-dev cmake \
+                                build-essential qml-module-qtquick-controls2 \
+                                qml-module-qtgraphicaleffects qml-module-qtquick-layouts
+
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      run: cmake --build build -j$(nproc)
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Transporti-Linux
+        path: build/Transporti
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.15.2'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+
+    - name: Install dependencies
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        vcpkg install zstd:x64-windows
+
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+    - name: Build
+      run: cmake --build build --config Release
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Transporti-Windows
+        path: build/Release/Transporti.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Qt
+      run: brew install qt@5 zstd
+
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$(brew --prefix qt@5)
+
+    - name: Build
+      run: cmake --build build -j$(sysctl -n hw.ncpu)
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Transporti-macOS
+        path: build/Transporti

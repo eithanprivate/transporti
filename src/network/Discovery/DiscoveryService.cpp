@@ -98,8 +98,21 @@ void DiscoveryService::processDatagram()
             continue;
 
         QJsonObject message = doc.object();
+        QString messageType = message["type"].toString();
 
-        if (message["type"].toString() != "TRANSPORTI_DISCOVERY")
+        if (messageType == "PAIRING_REQUEST") {
+            // Handle pairing request
+            QJsonObject deviceObj = message["device"].toObject();
+            QString peerId = deviceObj["id"].toString();
+            QString peerName = deviceObj["name"].toString();
+            QString pin = message["pin"].toString();
+
+            qDebug() << "Pairing request received from:" << peerName << "PIN:" << pin;
+            emit pairingRequestReceived(peerId, peerName, pin);
+            continue;
+        }
+
+        if (messageType != "TRANSPORTI_DISCOVERY")
             continue;
 
         QJsonObject deviceObj = message["device"].toObject();
@@ -152,4 +165,37 @@ void DiscoveryService::checkPeerTimeouts()
         m_discoveredPeers.remove(peerId);
         emit peerLost(peerId);
     }
+}
+
+void DiscoveryService::sendPairingRequest(const QString &peerId, const QString &peerIp, const QString &pin)
+{
+    qDebug() << "Sending pairing request to" << peerId << "at" << peerIp << "with PIN:" << pin;
+
+    QJsonObject message;
+    message["type"] = "PAIRING_REQUEST";
+    message["version"] = "1.0";
+    message["pin"] = pin;
+
+    QJsonObject device;
+    device["id"] = m_deviceId;
+    device["name"] = QHostInfo::localHostName();
+#ifdef PLATFORM_LINUX
+    device["os"] = "linux";
+#elif defined(PLATFORM_WINDOWS)
+    device["os"] = "windows";
+#else
+    device["os"] = "unknown";
+#endif
+
+    message["device"] = device;
+    message["timestamp"] = QDateTime::currentMSecsSinceEpoch();
+
+    QJsonDocument doc(message);
+    QByteArray data = doc.toJson(QJsonDocument::Compact);
+
+    // Send to specific peer IP
+    QHostAddress peerAddress(peerIp);
+    m_udpSocket->writeDatagram(data, peerAddress, DISCOVERY_PORT);
+
+    qDebug() << "Pairing request sent to" << peerIp;
 }

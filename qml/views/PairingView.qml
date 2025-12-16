@@ -8,11 +8,19 @@ import "../styles"
 Item {
     id: root
 
-    property string pin: "123456"
-    property bool isSource: true  // true = source (Linux), false = destination (Windows)
+    property string pin: appCore.currentPin || "------"
+    property bool isSource: appState.role === 1  // 1 = source (Linux), 2 = destination (Windows)
 
     signal pairingConfirmed()
     signal pairingCancelled()
+
+    // Update PIN when it changes
+    Connections {
+        target: appCore
+        function onCurrentPinChanged() {
+            console.log("PIN updated:", appCore.currentPin)
+        }
+    }
 
     ColumnLayout {
         anchors.centerIn: parent

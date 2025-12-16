@@ -19,10 +19,12 @@ public:
 
     void startDiscovery();
     void stopDiscovery();
+    void sendPairingRequest(const QString &peerId, const QString &peerIp, const QString &pin);
 
 signals:
     void peerDiscovered(const PeerInfo &peer);
     void peerLost(const QString &peerId);
+    void pairingRequestReceived(const QString &peerId, const QString &peerName, const QString &pin);
 
 private slots:
     void sendBroadcast();

@@ -6,6 +6,7 @@
 #include "../network/Discovery/DiscoveryService.h"
 #include "../network/Transfer/TransferClient.h"
 #include "../network/Transfer/TransferServer.h"
+#include "../network/Security/PairingManager.h"
 #include "../scanner/LinuxScanner/LinuxDataScanner.h"
 #include <QDebug>
 
@@ -20,6 +21,7 @@ Application::Application(QObject *parent)
     , m_transferClient(nullptr)
     , m_transferServer(nullptr)
     , m_scanner(nullptr)
+    , m_pairingManager(new PairingManager(this))
 {
     qDebug() << "Transporti Application initialized";
 }
@@ -60,6 +62,8 @@ void Application::setRole(ApplicationState::AppRole role)
                 m_peerModel, &PeerListModel::addPeer);
         connect(m_discoveryService, &DiscoveryService::peerLost,
                 m_peerModel, &PeerListModel::removePeer);
+        connect(m_discoveryService, &DiscoveryService::pairingRequestReceived,
+                this, &Application::onPairingRequestReceived);
 
         m_discoveryService->startDiscovery();
     }
@@ -72,8 +76,30 @@ void Application::selectPeer(const QString &peerId)
 {
     qDebug() << "Peer selected:" << peerId;
     m_appState->setSelectedPeerId(peerId);
+
+    // Generate PIN
+    m_currentPin = m_pairingManager->generatePIN();
+    qDebug() << "Generated PIN:" << m_currentPin;
+    emit currentPinChanged();
+
+    // Get peer info to send pairing request
+    QString peerIp;
+    for (int i = 0; i < m_peerModel->rowCount(); i++) {
+        QModelIndex index = m_peerModel->index(i);
+        QString id = m_peerModel->data(index, m_peerModel->roleNames().key("deviceId")).toString();
+        if (id == peerId) {
+            peerIp = m_peerModel->data(index, m_peerModel->roleNames().key("deviceIP")).toString();
+            break;
+        }
+    }
+
+    if (!peerIp.isEmpty() && m_discoveryService) {
+        qDebug() << "Sending pairing request to" << peerIp;
+        m_discoveryService->sendPairingRequest(peerId, peerIp, m_currentPin);
+    }
+
+    // Move to pairing stage
     m_appState->setStage(ApplicationState::StagePairing);
-    // Pairing logic will be implemented in PairingManager
 }
 
 void Application::startScanning()
@@ -128,4 +154,17 @@ void Application::onScanningCompleted()
 void Application::onTransferProgress(qint64 bytesSent, qint64 totalBytes)
 {
     m_progressModel->updateProgress(bytesSent, totalBytes);
+}
+
+void Application::onPairingRequestReceived(const QString &peerId, const QString &peerName, const QString &pin)
+{
+    qDebug() << "Pairing request received from" << peerName << "PIN:" << pin;
+
+    // Store the PIN received from the other peer
+    m_currentPin = pin;
+    emit currentPinChanged();
+    m_appState->setSelectedPeerId(peerId);
+
+    // Move to pairing stage
+    m_appState->setStage(ApplicationState::StagePairing);
 }

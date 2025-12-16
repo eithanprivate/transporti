@@ -59,7 +59,7 @@ jobs:
     - name: Deploy Qt dependencies
       run: |
         cd build/Release
-        windeployqt.exe Transporti.exe --qmldir ../../qml
+        windeployqt.exe Transporti.exe --qmldir ../../qml --compiler-runtime
         copy C:\vcpkg\installed\x64-windows\bin\zstd.dll .
 
     - name: Upload artifact

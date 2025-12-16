@@ -48,5 +48,9 @@ target_link_libraries(TransportiLib PUBLIC
 
 target_include_directories(TransportiLib PUBLIC
     ${CMAKE_SOURCE_DIR}/src
-    ${ZSTD_INCLUDE_DIRS}
 )
+
+# Add ZSTD include directories only if they exist (Linux/macOS with pkg-config)
+if(ZSTD_INCLUDE_DIRS)
+    target_include_directories(TransportiLib PUBLIC ${ZSTD_INCLUDE_DIRS})
+endif()

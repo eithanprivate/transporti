@@ -23,8 +23,17 @@ find_package(Qt5 5.15 REQUIRED COMPONENTS
 )
 
 # Zstandard compression
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(ZSTD REQUIRED libzstd)
+if(WIN32)
+    # Windows: use vcpkg's find_package
+    find_package(zstd CONFIG REQUIRED)
+    set(ZSTD_LIBRARIES $<IF:$<TARGET_EXISTS:zstd::libzstd_shared>,zstd::libzstd_shared,zstd::libzstd_static>)
+    set(ZSTD_INCLUDE_DIRS "")
+    set(ZSTD_LIBRARY_DIRS "")
+else()
+    # Linux/macOS: use pkg-config
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(ZSTD REQUIRED libzstd)
+endif()
 
 # Platform-specific settings
 if(WIN32)
@@ -68,8 +77,10 @@ target_link_libraries(Transporti PRIVATE
     TransportiLib
 )
 
-# Link Zstandard library directories
-target_link_directories(Transporti PRIVATE ${ZSTD_LIBRARY_DIRS})
+# Link Zstandard library directories (only for Linux/macOS with pkg-config)
+if(ZSTD_LIBRARY_DIRS)
+    target_link_directories(Transporti PRIVATE ${ZSTD_LIBRARY_DIRS})
+endif()
 
 # Installation
 install(TARGETS Transporti

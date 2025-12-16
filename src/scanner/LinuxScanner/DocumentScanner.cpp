@@ -26,7 +26,7 @@ DocumentScanner::DocumentScanner(QObject *parent)
 void DocumentScanner::startScan()
 {
     qDebug() << "DocumentScanner: Starting scan...";
-    m_cancelled.store(0);
+    m_cancelled.storeRelaxed(0);
     m_scannedFiles = 0;
     m_totalFiles = 0;
 
@@ -39,7 +39,7 @@ void DocumentScanner::startScan()
 
         // First pass: count total files for progress reporting
         for (const QString &dir : directories) {
-            if (m_cancelled.load()) {
+            if (m_cancelled.loadRelaxed()) {
                 return;
             }
 
@@ -49,7 +49,7 @@ void DocumentScanner::startScan()
                 if (isDocumentFile(it.fileName())) {
                     m_totalFiles++;
                 }
-                if (m_cancelled.load()) {
+                if (m_cancelled.loadRelaxed()) {
                     return;
                 }
             }
@@ -59,7 +59,7 @@ void DocumentScanner::startScan()
 
         // Second pass: collect file info
         for (const QString &dir : directories) {
-            if (m_cancelled.load()) {
+            if (m_cancelled.loadRelaxed()) {
                 emit scanError("Scan cancelled by user");
                 return;
             }
@@ -67,7 +67,7 @@ void DocumentScanner::startScan()
             scanDirectory(dir, allFiles);
         }
 
-        if (!m_cancelled.load()) {
+        if (!m_cancelled.loadRelaxed()) {
             // Calculate total size
             for (const FileInfo &file : allFiles) {
                 totalSize += file.size;
@@ -82,7 +82,7 @@ void DocumentScanner::startScan()
 void DocumentScanner::cancelScan()
 {
     qDebug() << "DocumentScanner: Cancelling scan...";
-    m_cancelled.store(1);
+    m_cancelled.storeRelaxed(1);
 }
 
 void DocumentScanner::scanDirectory(const QString &path, QList<FileInfo> &files)
@@ -90,7 +90,7 @@ void DocumentScanner::scanDirectory(const QString &path, QList<FileInfo> &files)
     QDirIterator it(path, QDir::Files | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     while (it.hasNext()) {
-        if (m_cancelled.load()) {
+        if (m_cancelled.loadRelaxed()) {
             return;
         }
 
